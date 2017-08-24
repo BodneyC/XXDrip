@@ -120,7 +120,7 @@ int main(int argc, char const *argv[]) {
 		for (size_t i = 0; i < CMDArgs.bytesafterline; i++)
 			std::cout << presec[i] << '\n';
 	}
-	std::cout << "Program complete" << '\n';
+	std::cout << '\n' << "Program complete" << '\n';
 	delete[] sectorArr; delete[] presec; delete[] postsec;
 	return 0;
 }
