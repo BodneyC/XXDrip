@@ -1,19 +1,30 @@
 #include "hex_out.h"
 
-void hexbegin (int beginingJ, std::ostream &stream) {
+int hexbegin (int j, std::ostream &stream, int rowNum, int colNum) {
+  // Output table outline
   stream << "Hexadecimal Output" << '\n';
   stream << '\n' << "        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n';
   stream << "       ------------------------------------------------ : -------------------------------" << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
+  // Fill empty space for the columns
+  for (int i = 0; i < rowNum; i++) {
+    j += 16;
+    stream << "                                                :                                " << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
+  }
+  // Fill empty space for the rows
+  for (int i = 0; i < colNum; i++) {
+    stream << "   ";
+  }
+  return j;
 }
-
-void hexoutput (BYTE sector[], int bytecount, std::ostream &stream) {
+//----------------------------------------------------------
+void hexoutput (BYTE sector[], std::ostream &stream, int initJ) {
   int i = 0; //Overall byte count
   int k = 0; //Line count
-  int j = 0; //Sector line count
   int a = 0; //Char count
+  static int j = initJ;
 
   j+=16;
-  while( i != bytecount )	{
+  while( i != 512 )	{
     if (k != 15) { //Print one char, repeat
       stream << std::hex << std::noshowbase << std::setw(2) << (int)sector[i] << ' ';
       k++;
@@ -45,7 +56,7 @@ void hexoutput (BYTE sector[], int bytecount, std::ostream &stream) {
           i++;
         }
         i--;
-        if(i != bytecount-1) {
+        if(i != 511) {
           stream << '\n' << "       ------------------------------------------------ : -------------------------------" << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
         }
         j=j+16;
