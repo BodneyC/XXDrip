@@ -13,7 +13,7 @@ int hexbegin (int j, std::ostream &stream, int rowNum) {
   return j;
 }
 //----------------------------------------------------------
-void hexoutput (BYTE sector[], std::ostream &stream, int initJ, int bytecount) {
+void hexoutput (BYTE sector[], std::ostream &stream, int initJ, int bytecount, int mode) {
   int i = 0; //Overall byte count
   int k = 0; //col count
   int a = 0; //Char count
@@ -27,11 +27,12 @@ void hexoutput (BYTE sector[], std::ostream &stream, int initJ, int bytecount) {
   if (bytecount < 16) {
     k = 16 - bytecount;
     // Fill empty space for the rows
+  }
+  if (mode == 1) {
     for (int i = 0; i < 16-bytecount; i++) {
       stream << "   ";
     }
   }
-
 
   j += 16;
   while( i != bytecount )	{
@@ -39,11 +40,16 @@ void hexoutput (BYTE sector[], std::ostream &stream, int initJ, int bytecount) {
       stream << std::hex << std::noshowbase << std::setw(2) << (int)sector[i] << ' ';
       k++;
     } else if (k == 15) {
+      if (mode == 2) {
+        for (size_t o = 0; o < 16 - bytecount; o++) {
+          stream << "   ";
+        }
+      }
       stream << std::hex << std::noshowbase <<  std::setw(2) << (int)sector[i] << " : ";
       i-= (bytecount-1);
-      if (bytecount < 16) {
+      if (mode == 1) {
         for (size_t o = 0; o < bytecount-1; o++) {
-          stream << ' ';
+          stream << "  ";
         }
       }
       for (a=0; a < bytecount; a++) {//char loop

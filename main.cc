@@ -26,37 +26,37 @@ void processArgs () {
 	hexInfo.colNumBeg = hexInfo.bytesintosector % 16;
 	hexInfo.rowNumBeg = (hexInfo.bytesintosector - hexInfo.colNumBeg) / 16;
 	hexInfo.colNumEnd = CMDArgs.bytesafterline % 16;
-	hexInfo.rowNumEnd = (CMDArgs.bytesafterline - hexInfo.colNumEnd) / 16;
+	hexInfo.rowNumEnd = CMDArgs.bytesafterline / 16;
 	hexInfo.beginningJ = CMDArgs.beginVal - hexInfo.bytesintosector;
 }
 /*------------------------------------------------------------
 Argument Returning (CMDArgs)
 ------------------------------------------------------------*/
 void returnArgs (int argn, char const *args[]) {
-		try {
-			TCLAP::CmdLine cmd("XXDrip", ' ', "0.01");
-			TCLAP::ValueArg<std::string> inputArg("i", "input", "Input File-path", true, "empty", "String");
-			TCLAP::ValueArg<int> beginArg("b", "begin", "Offset of Begin Read", false, 0, "Int");
-			TCLAP::ValueArg<int> endArg("e", "end", "Offset of End Read", false, 0, "Int");
-			TCLAP::SwitchArg rawSwitch("r", "raw", "Output Raw Hex", cmd, 0);
-			cmd.add(inputArg);
-			cmd.add(beginArg);
-			cmd.add(endArg);
-			cmd.parse(argn, args);
-			CMDArgs.beginVal = beginArg.getValue();
-			CMDArgs.inputString = inputArg.getValue();
-			CMDArgs.endVal = endArg.getValue();
-			CMDArgs.rawoutput = rawSwitch.getValue();
-		} catch (TCLAP::ArgException &e) {
-			std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
-		}
+	try {
+		TCLAP::CmdLine cmd("XXDrip", ' ', "0.01");
+		TCLAP::ValueArg<std::string> inputArg("i", "input", "Input File-path", true, "empty", "String");
+		TCLAP::ValueArg<int> beginArg("b", "begin", "Offset of Begin Read", false, 0, "Int");
+		TCLAP::ValueArg<int> endArg("e", "end", "Offset of End Read", false, 0, "Int");
+		TCLAP::SwitchArg rawSwitch("r", "raw", "Output Raw Hex", cmd, 0);
+		cmd.add(inputArg);
+		cmd.add(beginArg);
+		cmd.add(endArg);
+		cmd.parse(argn, args);
+		CMDArgs.beginVal = beginArg.getValue();
+		CMDArgs.inputString = inputArg.getValue();
+		CMDArgs.endVal = endArg.getValue();
+		CMDArgs.rawoutput = rawSwitch.getValue();
+	} catch (TCLAP::ArgException &e) {
+		std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
+	}
 }
 /*-------------------------------------------------------------
 MAIN
 -------------------------------------------------------------*/
 int main(int argc, char const *argv[]) {
 	BYTE *sectorArr = new BYTE[512];
-	BYTE *lineremaining = new BYTE[16];
+	BYTE *lineArr = new BYTE[16];
 	BYTE *presec, *postsec;
 	returnArgs(argc, argv);
 	// Open inputFile and check if open
@@ -79,38 +79,48 @@ int main(int argc, char const *argv[]) {
 	if(!CMDArgs.rawoutput) {
 		hexInfo.beginningJ = hexbegin(hexInfo.beginningJ, std::cout, hexInfo.rowNumBeg);
 
-		inputFile.read ((char*)lineremaining, 16-hexInfo.colNumBeg);
-		hexoutput(lineremaining, std::cout, hexInfo.beginningJ, 16-hexInfo.colNumBeg);
+		inputFile.read ((char*)lineArr, 16-hexInfo.colNumBeg);
+		hexoutput(lineArr, std::cout, hexInfo.beginningJ, 16-hexInfo.colNumBeg, 1);
+
 		for (size_t i = 0; i < 32 - (hexInfo.rowNumBeg+1); i++) {
-			inputFile.read ((char*)lineremaining, 16);
-			hexoutput(lineremaining, std::cout, 0, 16);
+			inputFile.read ((char*)lineArr, 16);
+			hexoutput(lineArr, std::cout, 0, 16, 0);
 		}
 
 		for (size_t i = 0; i < CMDArgs.loopcount; i++) {
 			for (size_t j = 0; j < 32; j++) {
-				inputFile.read ((char*)lineremaining, 16);
-				hexoutput(lineremaining, std::cout, 0, 16);
+				inputFile.read ((char*)lineArr, 16);
+				hexoutput(lineArr, std::cout, 0, 16, 0);
 			}
 		}
 
-		for (size_t i = 0; i < 32 - (hexInfo.rowNumEnd+1); i++) {
-			inputFile.read ((char*)lineremaining, 16);
-			hexoutput(lineremaining, std::cout, 0, 16);
+		for (size_t i = 0; i < hexInfo.rowNumEnd; i++) {
+			inputFile.read ((char*)lineArr, 16);
+			hexoutput(lineArr, std::cout, 0, 16, 0);
 		}
-		inputFile.read ((char*)lineremaining, 16-hexInfo.colNumEnd);
-		hexoutput(lineremaining, std::cout, hexInfo.beginningJ, 16-hexInfo.colNumEnd);
-		// Loop:
-			// Read 512 bytes
-			// Send to hexoutput
+		inputFile.read ((char*)lineArr, 16-hexInfo.colNumEnd);
+		hexoutput(lineArr, std::cout, hexInfo.beginningJ, 16-hexInfo.colNumEnd, 2);
 
-		// Read rmaining bytes
-		// Send to hexoutput
 	} else {
-		// outputInfo.diff / 512
-		// R/w
-		// outputInfo.diff % 512
-		// R/w
+		// Read the no of bytes before sec line
+		inputFile.read ((char*)presec, CMDArgs.bytestoline);
+		// For the no of bytes before sec line, print
+		for (size_t i = 0; i < CMDArgs.bytestoline; i++)
+			std::cout << presec[i] << '\n';
+		// Read for the no of remaining sectors...
+		for (size_t i = 0; i < CMDArgs.loopcount; i++) {
+			inputFile.read ((char*) sectorArr, 512);
+			// ...and write per byte
+			for (size_t p = 0; p < 512; p++)
+				std::cout << sectorArr[i] << '\n';
+		}
+		// Read the no of bytes after sec line
+		inputFile.read ((char*) postsec, CMDArgs.bytesafterline);
+		// For the no of bytes after sec line, print
+		for (size_t i = 0; i < CMDArgs.bytesafterline; i++)
+			std::cout << presec[i] << '\n';
 	}
-	delete[] sectorArr;
+	std::cout << "Program complete" << '\n';
+	delete[] sectorArr; delete[] presec; delete[] postsec;
 	return 0;
 }
