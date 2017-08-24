@@ -1,67 +1,61 @@
 #include "hex_out.h"
 
-int hexbegin (int j, std::ostream &stream, int rowNum, int colNum) {
+int hexbegin (int j, std::ostream &stream, int rowNum) {
   // Output table outline
   stream << "Hexadecimal Output" << '\n';
-  stream << '\n' << "        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n';
-  stream << "       ------------------------------------------------ : -------------------------------" << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
+  stream << '\n' << "        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f";
+  // stream << "       ------------------------------------------------ : -------------------------------" << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
   // Fill empty space for the columns
   for (int i = 0; i < rowNum; i++) {
     j += 16;
     stream << "                                                :                                " << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
   }
-  // Fill empty space for the rows
-  for (int i = 0; i < colNum; i++) {
-    stream << "   ";
-  }
   return j;
 }
 //----------------------------------------------------------
-void hexoutput (BYTE sector[], std::ostream &stream, int initJ) {
+void hexoutput (BYTE sector[], std::ostream &stream, int initJ, int bytecount) {
   int i = 0; //Overall byte count
-  int k = 0; //Line count
+  int k = 0; //col count
   int a = 0; //Char count
   static int j = initJ;
 
-  j+=16;
-  while( i != 512 )	{
+  if (j % 512 == 0) {
+    stream << '\n' << "        ----------------------------------------------- : -------------------------------";
+  }
+  stream << '\n'<< std::hex << std::showbase << std::setw(5) << j << " | ";
+
+  if (bytecount < 16) {
+    k = 16 - bytecount;
+    // Fill empty space for the rows
+    for (int i = 0; i < 16-bytecount; i++) {
+      stream << "   ";
+    }
+  }
+
+
+  j += 16;
+  while( i != bytecount )	{
     if (k != 15) { //Print one char, repeat
       stream << std::hex << std::noshowbase << std::setw(2) << (int)sector[i] << ' ';
       k++;
     } else if (k == 15) {
-      if(j % 512 != 0) {//Check for sector break
-        stream << std::hex << std::noshowbase <<  std::setw(2) << (int)sector[i] << " : ";
-        i-=15; //Return line for char
-        for (a=0; a <= 15; a++) {//char loop
-          if((sector[i] <= 0x20) || (sector[i] == 0x7F)) {
-            stream << ". ";
-          } else {
-            stream << sector[i] << ' ';
-          }
-          i++; //Compensate for subbing 15
+      stream << std::hex << std::noshowbase <<  std::setw(2) << (int)sector[i] << " : ";
+      i-= (bytecount-1);
+      if (bytecount < 16) {
+        for (size_t o = 0; o < bytecount-1; o++) {
+          stream << ' ';
         }
-        i--;
-        stream << '\n' << std::hex << std::showbase << std::setw(5) << j << " | ";
-        k = 0; //For the new line
-        j = j+16; //Setup next line
-      } else {
-        stream << std::hex << std::noshowbase << std::setw(2) << (int)sector[i] << " : ";
-        i-=15;
-        for (a=0; a <= 15; a++) { //Print chars
-          if((sector[i] <= 0x20) || (sector[i] == 0x7F)) { //ASCII control
-            stream << ". ";
-          } else {
-            stream << sector[i] << ' ';
-          }
-          i++;
-        }
-        i--;
-        if(i != 511) {
-          stream << '\n' << "       ------------------------------------------------ : -------------------------------" << '\n' << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " | ";
-        }
-        j=j+16;
-        k = 0;
       }
+      for (a=0; a < bytecount; a++) {//char loop
+        if((sector[i] <= 0x20) || (sector[i] == 0x7F)) {
+          stream << ". ";
+        } else {
+          stream << sector[i] << ' ';
+        }
+        i++; //Compensate for subbing 15
+      }
+      i--;
+      k = 0; //For the new line
     }
     i++;
   }

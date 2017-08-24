@@ -8,8 +8,7 @@
 
 typedef unsigned char BYTE;
 
-int hexbegin (int j, std::ostream &stream, int rowNum, int colNum);
-void hexoutput (BYTE sector[], std::ostream &stream, int j);
-// std::vector<BYTE> readFileintoVec(const char* filename);
+int hexbegin (int j, std::ostream &stream, int rowNum);
+void hexoutput (BYTE sector[], std::ostream &stream, int j, int bytecount);
 
 #endif

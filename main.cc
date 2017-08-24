@@ -10,7 +10,7 @@ struct inputinfo {
 } CMDArgs;
 
 struct outputInfo {
-	int beginningJ, rowNum, colNum, bytesintosector;
+	int beginningJ, rowNumBeg, rowNumEnd, colNumBeg, colNumEnd, bytesintosector;
 } hexInfo;
 /*------------------------------------------------------------
 Argument Processing (outputInfo)
@@ -20,11 +20,13 @@ void processArgs () {
 	hexInfo.bytesintosector = CMDArgs.beginVal % 512;
 	CMDArgs.bytestoline = 512 - hexInfo.bytesintosector;
 	CMDArgs.bytesafterline = CMDArgs.endVal % 512;
-	CMDArgs.diff = tempDiff = CMDArgs.beginVal - CMDArgs.endVal;
+	CMDArgs.diff = tempDiff = CMDArgs.endVal - CMDArgs.beginVal;
 	tempDiff-= (CMDArgs.bytestoline + CMDArgs.bytesafterline);
 	CMDArgs.loopcount = tempDiff / 512;
-	hexInfo.colNum = hexInfo.bytesintosector % 16;
-	hexInfo.rowNum = (hexInfo.bytesintosector - hexInfo.colNum) / 16;
+	hexInfo.colNumBeg = hexInfo.bytesintosector % 16;
+	hexInfo.rowNumBeg = (hexInfo.bytesintosector - hexInfo.colNumBeg) / 16;
+	hexInfo.colNumEnd = CMDArgs.bytesafterline % 16;
+	hexInfo.rowNumEnd = (CMDArgs.bytesafterline - hexInfo.colNumEnd) / 16;
 	hexInfo.beginningJ = CMDArgs.beginVal - hexInfo.bytesintosector;
 }
 /*------------------------------------------------------------
@@ -46,13 +48,16 @@ void returnArgs (int argn, char const *args[]) {
 			CMDArgs.endVal = endArg.getValue();
 			CMDArgs.rawoutput = rawSwitch.getValue();
 		} catch (TCLAP::ArgException &e) {
-			std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
+			std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
 		}
 }
 /*-------------------------------------------------------------
 MAIN
 -------------------------------------------------------------*/
 int main(int argc, char const *argv[]) {
+	BYTE *sectorArr = new BYTE[512];
+	BYTE *lineremaining = new BYTE[16];
+	BYTE *presec, *postsec;
 	returnArgs(argc, argv);
 	// Open inputFile and check if open
 	std::ifstream inputFile (CMDArgs.inputString.c_str(), std::ios::binary);
@@ -68,13 +73,32 @@ int main(int argc, char const *argv[]) {
 	inputFile.seekg(CMDArgs.beginVal, inputFile.beg);
 	// Process arguments with filebased beginVal
 	processArgs();
+	presec = new BYTE[CMDArgs.bytestoline];
+	postsec = new BYTE[CMDArgs.bytesafterline];
 
 	if(!CMDArgs.rawoutput) {
-		hexInfo.beginningJ = hexbegin(hexInfo.beginningJ, std::cout, hexInfo.rowNum, hexInfo.colNum);
-		std::cout << "Cheese" << hexInfo.colNum << '\n';
-		// Read X bytes up to sector lines
-		// Send to hexoutput
+		hexInfo.beginningJ = hexbegin(hexInfo.beginningJ, std::cout, hexInfo.rowNumBeg);
 
+		inputFile.read ((char*)lineremaining, 16-hexInfo.colNumBeg);
+		hexoutput(lineremaining, std::cout, hexInfo.beginningJ, 16-hexInfo.colNumBeg);
+		for (size_t i = 0; i < 32 - (hexInfo.rowNumBeg+1); i++) {
+			inputFile.read ((char*)lineremaining, 16);
+			hexoutput(lineremaining, std::cout, 0, 16);
+		}
+
+		for (size_t i = 0; i < CMDArgs.loopcount; i++) {
+			for (size_t j = 0; j < 32; j++) {
+				inputFile.read ((char*)lineremaining, 16);
+				hexoutput(lineremaining, std::cout, 0, 16);
+			}
+		}
+
+		for (size_t i = 0; i < 32 - (hexInfo.rowNumEnd+1); i++) {
+			inputFile.read ((char*)lineremaining, 16);
+			hexoutput(lineremaining, std::cout, 0, 16);
+		}
+		inputFile.read ((char*)lineremaining, 16-hexInfo.colNumEnd);
+		hexoutput(lineremaining, std::cout, hexInfo.beginningJ, 16-hexInfo.colNumEnd);
 		// Loop:
 			// Read 512 bytes
 			// Send to hexoutput
@@ -87,5 +111,6 @@ int main(int argc, char const *argv[]) {
 		// outputInfo.diff % 512
 		// R/w
 	}
+	delete[] sectorArr;
 	return 0;
 }
