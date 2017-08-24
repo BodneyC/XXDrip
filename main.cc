@@ -106,19 +106,19 @@ int main(int argc, char const *argv[]) {
 		inputFile.read ((char*)presec, CMDArgs.bytestoline);
 		// For the no of bytes before sec line, print
 		for (size_t i = 0; i < CMDArgs.bytestoline; i++)
-			std::cout << presec[i] << '\n';
+			std::cout << (int)presec[i];
 		// Read for the no of remaining sectors...
 		for (size_t i = 0; i < CMDArgs.loopcount; i++) {
 			inputFile.read ((char*) sectorArr, 512);
 			// ...and write per byte
 			for (size_t p = 0; p < 512; p++)
-				std::cout << sectorArr[i] << '\n';
+				std::cout << (int)sectorArr[i];
 		}
 		// Read the no of bytes after sec line
 		inputFile.read ((char*) postsec, CMDArgs.bytesafterline);
 		// For the no of bytes after sec line, print
 		for (size_t i = 0; i < CMDArgs.bytesafterline; i++)
-			std::cout << presec[i] << '\n';
+			std::cout << (int)presec[i];
 	}
 	std::cout << '\n' << "Program complete" << '\n';
 	delete[] sectorArr; delete[] presec; delete[] postsec;
