@@ -1,4 +1,6 @@
 #include "hex_out.h"
+ 
+
 
 int hexbegin (int j, std::ostream &stream, int rowNum) {
   // Output table outline
