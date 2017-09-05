@@ -1,6 +1,6 @@
 #include "hex_out.h"
 /*-------------------------------------------------------------
-Preamble to formatted hexoutput
+FUNC: Preamble to formatted hexoutput
 -------------------------------------------------------------*/
 int hexbegin (int j, std::ostream &stream, int rowNum) {
   // Output table outline
@@ -8,16 +8,16 @@ int hexbegin (int j, std::ostream &stream, int rowNum) {
   stream << '\n' << "        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n' << "        ----------------------------------------------- : -------------------------------" << '\n';
   // Fill empty space for the columns
   for (int i = 0; i < rowNum; i++) {
-    stream << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(5) << j << " |                                                 :                                " << '\n';
+    stream << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(7) << j << " |                                                 :                                " << '\n';
     j += 16;
   }
   return j;
 }
 /*-------------------------------------------------------------
-If a single ilne of both sides missing bytes
+FUNC: If a single ilne of both sides missing bytes
 -------------------------------------------------------------*/
 void hexLT16out (BYTE *sector, std::ostream &stream, int initJ, int start, int bytecount) {
-  stream << std::hex << std::showbase << std::setw(5) << initJ << " | ";
+  stream << std::hex << std::showbase << std::setw(7) << initJ << " | ";
   for (int i = 0; i < start; i++)
     stream << "   ";
   for (int i = 0; i < bytecount; i++)
@@ -37,12 +37,12 @@ void hexLT16out (BYTE *sector, std::ostream &stream, int initJ, int start, int b
   stream << '\n';
 }
 /*-------------------------------------------------------------
-Primary line-by-line outputter
+FUNC: Primary line-by-line outputter
 -------------------------------------------------------------*/
 void hexoutput (BYTE *sector, std::ostream &stream, int initJ, int bytecount, int mode) {
   static int j = initJ;
 
-  stream << std::hex << std::showbase << std::setw(5) << j << " | ";
+  stream << std::hex << std::showbase << std::setw(7) << j << " | ";
 
   j +=16;
   if (mode == 1) {
