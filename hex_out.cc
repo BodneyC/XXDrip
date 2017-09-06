@@ -5,7 +5,7 @@ FUNC: Preamble to formatted hexoutput
 int hexbegin (int j, std::ostream &stream, int rowNum) {
   // Output table outline
   stream << "Hexadecimal Output" << '\n';
-  stream << '\n' << "        0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n' << "        ----------------------------------------------- : -------------------------------" << '\n';
+  stream << '\n' << "          0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n' << "          ----------------------------------------------- : -------------------------------" << '\n';
   // Fill empty space for the columns
   for (int i = 0; i < rowNum; i++) {
     stream << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(7) << j << " |                                                 :                                " << '\n';
@@ -17,11 +17,11 @@ int hexbegin (int j, std::ostream &stream, int rowNum) {
 FUNC: If a single ilne of both sides missing bytes
 -------------------------------------------------------------*/
 void hexLT16out (BYTE *sector, std::ostream &stream, int initJ, int start, int bytecount) {
-  stream << std::hex << std::showbase << std::setw(7) << initJ << " | ";
+  stream << std::hex << std::showbase << std::setfill(' ') << std::setw(7) << initJ << " | ";
   for (int i = 0; i < start; i++)
     stream << "   ";
   for (int i = 0; i < bytecount; i++)
-    stream << std::hex << std::noshowbase << std::setw(2) << (int)sector[i] << ' ';
+    stream << std::hex << std::noshowbase << std::uppercase << std::setw(2) << std::setfill('0') << (int)sector[i] << ' ';
   for (int i = 0; i < 16 - (start + bytecount); i++)
     stream << "   ";
   stream << ": ";
@@ -42,7 +42,7 @@ FUNC: Primary line-by-line outputter
 void hexoutput (BYTE *sector, std::ostream &stream, int initJ, int bytecount, int mode) {
   static int j = initJ;
 
-  stream << std::hex << std::showbase << std::setw(7) << j << " | ";
+  stream << std::hex << std::showbase << std::nouppercase << std::setfill(' ') << std::setw(7) << j << " | ";
 
   j +=16;
   if (mode == 1) {
@@ -52,7 +52,7 @@ void hexoutput (BYTE *sector, std::ostream &stream, int initJ, int bytecount, in
   }
 
   for (int o = 0; o < bytecount; o++)
-    stream << std::hex << std::noshowbase << std::setw(2) << (int)sector[o] << ' ';
+    stream << std::hex << std::noshowbase << std::uppercase << std::setw(2) << std::setfill('0') << (int)sector[o] << ' ';
   if (mode == 2) {
     for (int o = 0; o < 16 - bytecount; o++) {
       stream << "   ";

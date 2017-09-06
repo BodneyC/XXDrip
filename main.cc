@@ -34,8 +34,8 @@ Argument Returning (CMDArgs)
 ------------------------------------------------------------*/
 void returnArgs (int argn, char const *args[]) {
 	try {
-		TCLAP::CmdLine cmd("XXDrip", ' ', "0.01");
-		TCLAP::ValueArg<std::string> inputArg("i", "input", "Input File-path", true, "empty", "String");
+		TCLAP::CmdLine cmd("XXDrip", ' ', "1.02");
+		TCLAP::UnlabeledValueArg<std::string> inputArg("input", "Input File-path", true, "empty", "String", false);
 		TCLAP::ValueArg<std::string> outputArg("o", "output", "Output to File-path", false, "empty", "String");
 		TCLAP::ValueArg<int> beginArg("s", "start", "Offset of Begin Read", false, 0, "Int");
 		TCLAP::ValueArg<int> endArg("e", "end", "Offset of End Read", false, 0, "Int");
@@ -64,25 +64,28 @@ int main(int argc, char const *argv[]) {
 	BYTE *lineArr = new BYTE[16];
 	bool overline = false;
 	returnArgs(argc, argv);
-	// outputFile if needed
-	std::ofstream outputFile;
 	std::ifstream inputFile (CMDArgs.inputString.c_str(), std::ios::binary);
 	// Open inputFile and check if open
 	if(!inputFile.is_open()) {
 		std::cout << "Cannot open input file" << '\n';
+		return 1;
 	}
+	// outputFile if needed
+	std::ofstream outputFile;
 	// Open output file as binary if requested...
 	if (CMDArgs.outputString != "empty" && CMDArgs.binoutput == true) {
 		CMDArgs.rawoutput = true; // If outputting as binary, also output as raw
 		outputFile.open (CMDArgs.outputString.c_str(), std::ios::binary | std::ios::trunc);
 		if(!outputFile.is_open()) {
 			std::cout << "Cannot open output file as binary" << '\n';
+			return 1;
 		}
 	// If not as binary, output formatted
 	} else if (CMDArgs.outputString != "empty" && CMDArgs.binoutput == false) {
 		outputFile.open (CMDArgs.outputString.c_str(), std::ios::trunc);
 		if(!outputFile.is_open()) {
 			std::cout << "Cannot open output file" << '\n';
+			return 1;
 		}
 	}
 	std::ostream &stream = CMDArgs.outputString == "empty" ? std::cout : outputFile; // Set stream to cout or outputFile depending
@@ -119,7 +122,7 @@ int main(int argc, char const *argv[]) {
 				hexoutput(lineArr, stream, hexInfo.beginningJ, hexInfo.colNumEnd, 2);
 			}
 		}
-	// If not outputting as raw
+	// If outputting as raw
 	} else {
 		for (int i = 0; i < CMDArgs.diff / 16; i++) {
 			inputFile.read ((char*)lineArr, 16);
