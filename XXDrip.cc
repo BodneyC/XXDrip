@@ -6,16 +6,14 @@
 #include <tclap/CmdLine.h>
 #include "hex_out.h"
 
-struct inputinfo
-{
+struct inputinfo {
     int beginVal, endVal, bytestoline, loopcount, bytesafterline;
     __int64 diff;
     std::string inputString, outputString;
     bool binoutput, rawoutput;
 } CMDArgs;
 
-struct outputInfo
-{
+struct outputInfo {
     int beginningJ, rowNumBeg, rowNumEnd, colNumBeg, colNumEnd, bytesintosector;
 } hexInfo;
 
@@ -47,8 +45,7 @@ void processArgs ()
  *------------------------------------------------------------*/
 void returnArgs (int argn, char const *args[])
 {
-    try
-    {
+    try {
         TCLAP::CmdLine cmd("XXDrip", ' ', "1.02");
         TCLAP::UnlabeledValueArg<std::string> inputArg("input", "Input File-path", true, "empty", "String", false);
         TCLAP::ValueArg<std::string> outputArg("o", "output", "Output to File-path", false, "empty", "String");
@@ -67,9 +64,7 @@ void returnArgs (int argn, char const *args[])
         CMDArgs.endVal = endArg.getValue();
         CMDArgs.rawoutput = rawSwitch.getValue();
         CMDArgs.binoutput = binSwitch.getValue();
-    }
-    catch (TCLAP::ArgException &e)
-    {
+    } catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
     }
 }
@@ -86,8 +81,7 @@ int main(int argc, char const *argv[])
     std::ifstream inputFile (CMDArgs.inputString.c_str(), std::ios::binary);
 
     // Open inputFile and check if open
-    if(!inputFile.is_open())
-    {
+    if(!inputFile.is_open()) {
         std::cout << "Cannot open input file" << '\n';
         return 1;
     }
@@ -96,25 +90,20 @@ int main(int argc, char const *argv[])
     std::ofstream outputFile;
 
     // Open output file as binary if requested...
-    if (CMDArgs.outputString != "empty" && CMDArgs.binoutput == true)
-    {
+    if (CMDArgs.outputString != "empty" && CMDArgs.binoutput == true) {
         CMDArgs.rawoutput = true; // If outputting as binary, also output as raw
         outputFile.open (CMDArgs.outputString.c_str(), std::ios::binary | std::ios::trunc);
 
-        if(!outputFile.is_open())
-        {
+        if(!outputFile.is_open()) {
             std::cout << "Cannot open output file as binary" << '\n';
             return 1;
         }
 
         // If not as binary, output formatted
-    }
-    else if (CMDArgs.outputString != "empty" && CMDArgs.binoutput == false)
-    {
+    } else if (CMDArgs.outputString != "empty" && CMDArgs.binoutput == false) {
         outputFile.open (CMDArgs.outputString.c_str(), std::ios::trunc);
 
-        if(!outputFile.is_open())
-        {
+        if(!outputFile.is_open()) {
             std::cout << "Cannot open output file" << '\n';
             return 1;
         }
@@ -123,8 +112,7 @@ int main(int argc, char const *argv[])
     std::ostream &stream = CMDArgs.outputString == "empty" ? std::cout : outputFile; // Set stream to cout or outputFile depending
 
     // If endVal hasn't been provided, set endVal to EOF
-    if(!CMDArgs.endVal)
-    {
+    if(!CMDArgs.endVal) {
         inputFile.seekg (0, inputFile.end);
         CMDArgs.endVal = inputFile.tellg();
     }
@@ -136,8 +124,7 @@ int main(int argc, char const *argv[])
         overline = true;
 
     // If output is not meant as raw...
-    if(!CMDArgs.rawoutput)
-    {
+    if(!CMDArgs.rawoutput) {
         hexInfo.beginningJ = hexbegin(hexInfo.beginningJ, stream, hexInfo.rowNumBeg); // Output starting formatting
         inputFile.read ((char*)lineArr, 16);
 
@@ -152,27 +139,21 @@ int main(int argc, char const *argv[])
             hexLT16out(lineArr, stream, hexInfo.beginningJ, hexInfo.colNumBeg, CMDArgs.diff); // Pre-value whitespace, single line
 
         // If the output goes over the 16-byte mark, loop and output
-        if(overline)
-        {
-            for (int i = 0; i < (CMDArgs.loopcount) - 1; i++)
-            {
+        if(overline) {
+            for (int i = 0; i < (CMDArgs.loopcount) - 1; i++) {
                 inputFile.read ((char*)lineArr, 16);
                 hexoutput(lineArr, stream, 0, 16, 0);
             }
 
-            if (CMDArgs.diff % 16 != 0)
-            {
+            if (CMDArgs.diff % 16 != 0) {
                 inputFile.read ((char*)lineArr, 16);
                 hexoutput(lineArr, stream, hexInfo.beginningJ, hexInfo.colNumEnd, 2);
             }
         }
 
         // If outputting as raw
-    }
-    else
-    {
-        for (int i = 0; i < CMDArgs.diff / 16; i++)
-        {
+    } else {
+        for (int i = 0; i < CMDArgs.diff / 16; i++) {
             inputFile.read ((char*)lineArr, 16);
 
             if (CMDArgs.binoutput == true)
