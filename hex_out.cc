@@ -7,114 +7,89 @@
 /*-------------------------------------------------------------
  * FUNC: Preamble to formatted hexoutput
  *-------------------------------------------------------------*/
-int hexbegin (int j, std::ostream &stream, int rowNum)
+int Hex_out::hexbegin (struct outputInfo *hexInfo)
 {
-    // Output table outline
-    stream << "Hexadecimal Output" << '\n';
-    stream << '\n' << "          0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n' << "          ----------------------------------------------- : -------------------------------" << '\n';
+	// Output table outline
+	(*o_stream) << "Hexadecimal Output" << '\n';
+	(*o_stream) << '\n' << "		  0  1	2  3  4  5	6  7  8  9	a  b  c  d	e  f  : 0 1 2 3 4 5 6 7 8 9 a b c d e f" << '\n' << "		   ----------------------------------------------- : -------------------------------" << '\n';
 
-    // Fill empty space for the columns
-    for (int i = 0; i < rowNum; i++) {
-        stream << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(7) << j << " |                                                 :                                " << '\n';
-        j += 16;
-    }
+	// Fill empty space for the columns
+	for (int i = 0; i < hexInfo->rowNumBeg; i++) {
+		(*o_stream) << std::internal << std::setfill('0') << std::hex << std::showbase << std::setw(7) << hexInfo->beginningJ << " |												 :								  " << '\n';
+		hexInfo->beginningJ += 16;
+	}
 
-    return j;
+	return hexInfo->beginningJ;
 }
 
 /*-------------------------------------------------------------
  * FUNC: If a single ilne of both sides missing bytes
  *-------------------------------------------------------------*/
-void hexLT16out (BYTE *sector, std::ostream &stream, int initJ, int start, int bytecount)
+void Hex_out::hexLT16out (BYTE *sector, int initJ, int start, int bytecount)
 {
-    stream << std::hex << std::showbase << std::setfill(' ') << std::setw(7) << initJ << " | ";
+	(*o_stream) << std::hex << std::showbase << std::setfill(' ') << std::setw(7) << initJ << " | ";
 
-    for (int i = 0; i < start; i++)
-        stream << "   ";
+	for (int i = 0; i < start; i++)
+		(*o_stream) << "   ";
 
-    for (int i = 0; i < bytecount; i++)
-        stream << std::hex << std::noshowbase << std::uppercase << std::setw(2) << std::setfill('0') << (int)sector[i] << ' ';
+	for (int i = 0; i < bytecount; i++)
+		(*o_stream) << std::hex << std::noshowbase << std::uppercase << std::setw(2) << std::setfill('0') << (int)sector[i] << ' ';
 
-    for (int i = 0; i < 16 - (start + bytecount); i++)
-        stream << "   ";
+	for (int i = 0; i < 16 - (start + bytecount); i++)
+		(*o_stream) << "   ";
 
-    stream << ": ";
+	(*o_stream) << ": ";
 
-    for (int i = 0; i < start; i++)
-        stream << "  ";
+	for (int i = 0; i < start; i++)
+		(*o_stream) << "  ";
 
-    for (int i = 0; i < bytecount; i++) {
-        if((sector[i] <= 0x20) || (sector[i] == 0x7F)) {
-            stream << ". ";
-        } else
-            stream << sector[i] << ' ';
-    }
+	for (int i = 0; i < bytecount; i++) {
+		if((sector[i] <= 0x20) || (sector[i] == 0x7F)) {
+			(*o_stream) << ". ";
+		} else
+			(*o_stream) << sector[i] << ' ';
+	}
 
-    stream << '\n';
+	(*o_stream) << '\n';
 }
 
 /*-------------------------------------------------------------
  * FUNC: Primary line-by-line outputter
  *-------------------------------------------------------------*/
-void hexoutput (BYTE *sector, std::ostream &stream, int initJ, int bytecount, int mode)
+void Hex_out::hexoutput (BYTE *sector, int initJ, int bytecount, int mode)
 {
-    static int j = initJ;
+	static int j = initJ;
 
-    stream << std::hex << std::showbase << std::nouppercase << std::setfill(' ') << std::setw(7) << j << " | ";
+	(*o_stream) << std::hex << std::showbase << std::nouppercase << std::setfill(' ') << std::setw(7) << j << " | ";
 
-    j += 16;
+	j += 16;
 
-    if (mode == 1)
-        for (int i = 0; i < 16 - bytecount; i++)
-            stream << "   ";
+	if (mode == 1)
+		for (int i = 0; i < 16 - bytecount; i++)
+			(*o_stream) << "   ";
 
-    for (int o = 0; o < bytecount; o++)
-        stream << std::hex << std::noshowbase << std::uppercase << std::setw(2) << std::setfill('0') << (int)sector[o] << ' ';
+	for (int o = 0; o < bytecount; o++)
+		(*o_stream) << std::hex << std::noshowbase << std::uppercase << std::setw(2) << std::setfill('0') << (int)sector[o] << ' ';
 
-    if (mode == 2)
-        for (int o = 0; o < 16 - bytecount; o++)
-            stream << "   ";
+	if (mode == 2)
+		for (int o = 0; o < 16 - bytecount; o++)
+			(*o_stream) << "   ";
 
-    stream << ": ";
+	(*o_stream) << ": ";
 
-    if (mode == 1)
-        for (int o = 0; o < 16 - bytecount; o++)
-            stream << "  ";
+	if (mode == 1)
+		for (int o = 0; o < 16 - bytecount; o++)
+			(*o_stream) << "  ";
 
-    for (int o = 0; o < bytecount; o++)
-        if((sector[o] <= 0x20) || (sector[o] == 0x7F))
-            stream << ". ";
-        else
-            stream << sector[o] << ' ';
+	for (int o = 0; o < bytecount; o++)
+		if((sector[o] <= 0x20) || (sector[o] == 0x7F))
+			(*o_stream) << ". ";
+		else
+			(*o_stream) << sector[o] << ' ';
 
-    stream << '\n' ;
+	(*o_stream) << '\n' ;
 
-    if (j % 512 == 0)
-        stream << "        ------------------------------------------------- : -------------------------------" << '\n';
+	if (j % 512 == 0)
+		(*o_stream) << "		------------------------------------------------- : -------------------------------" << '\n';
 }
 
-/*
-  std::vector<BYTE> readFileintoVec(const char* filename){
-  // open the file:
-  std::ifstream file(filename, std::ios::binary);
-
-  // Stop eating new lines in binary mode!!!
-  file.unsetf(std::ios::skipws);
-
-  // get its size:
-  std::streampos fileSize;
-
-  file.seekg(0, std::ios::end);
-  fileSize = file.tellg();
-  file.seekg(0, std::ios::beg);
-
-  // reserve capacity
-  std::vector<BYTE> vec;
-  vec.reserve(fileSize);
-
-  // read the data:
-  vec.insert(vec.begin(), std::istream_iterator<BYTE>(file), std::istream_iterator<BYTE>());
-
-  return vec;
-}
-*/
